@@ -4,6 +4,8 @@ ChangeLog
 * 1.9.23 (WIP)
 
   * Add jack_max_cpu_load API call
+  * Don't include headers within ``extern "C"``
+  * Rewrite OSS backend for FreeBSD using sosso library
 
 * 1.9.22 (2023-02-02)
 
