@@ -167,6 +167,7 @@ int JackClientSocket::Close()
 int JackClientSocket::Read(void* data, int len)
 {
     int res;
+    uint8_t* udata = (uint8_t*)data;
 
 #if defined(__sun__) || defined(sun)
     if (fTimeOut > 0) {
@@ -193,30 +194,32 @@ int JackClientSocket::Read(void* data, int len)
     }
 #endif
 
-    if ((res = read(fSocket, data, len)) != len) {
-        if (errno == EWOULDBLOCK || errno == EAGAIN) {
-            jack_log("JackClientSocket::Read time out");
-            // For a non blocking socket, a read failure is not considered as an error
-            return 0;
-        } else if (res != 0) {
-            jack_error("Cannot read socket fd = %d res = %d err = %s", fSocket, res, strerror(errno));
-            //return 0;
-            return -1;
-        } else if (errno == 0 || errno == ENOTCONN) {
-            // aborted reading due to shutdown
-            return JACK_REQUEST_ERR_ABORTED;
-        } else {
+    while (len != 0 && (res = read(fSocket, udata, len)) != len) {
+        if (res <= 0) {
+            if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                jack_log("JackClientSocket::Read time out on socket fd = %d", fSocket);
+                // For a non blocking socket, a read failure is not considered as an error
+                memset(data, 0, len);
+                return 0;
+            }
+            if (errno == 0 || errno == ENOTCONN) {
+                // aborted reading due to shutdown
+                return JACK_REQUEST_ERR_ABORTED;
+            }
             jack_error("Cannot read socket fd = %d err = %s", fSocket, strerror(errno));
             return -1;
         }
-    } else {
-        return 0;
+        udata += res;
+        len -= res;
     }
+
+    return 0;
 }
 
 int JackClientSocket::Write(void* data, int len)
 {
     int res;
+    uint8_t* udata = (uint8_t*)data;
 
 #if defined(__sun__) || defined(sun)
     if (fTimeOut > 0) {
@@ -243,21 +246,25 @@ int JackClientSocket::Write(void* data, int len)
    }
 #endif
 
-    if ((res = write(fSocket, data, len)) != len) {
-        if (errno == EWOULDBLOCK || errno == EAGAIN) {
-            jack_log("JackClientSocket::Write time out");
-            return 0;  // For a non blocking socket, a write failure is not considered as an error
-        } else if (res != 0) {
-            jack_error("Cannot write socket fd = %ld err = %s", fSocket, strerror(errno));
-            //return 0;
-            return -1;
-        } else {
+    while (len != 0 && (res = write(fSocket, udata, len)) != len) {
+        if (res <= 0) {
+            if (errno == EWOULDBLOCK || errno == EAGAIN) {
+                jack_log("JackClientSocket::Write time out on socket fd = %d", fSocket);
+                // For a non blocking socket, a write failure is not considered as an error
+                return 0;
+            }
+            if (errno == 0 || errno == ENOTCONN) {
+                // aborted reading due to shutdown
+                return JACK_REQUEST_ERR_ABORTED;
+            }
             jack_error("Cannot write socket fd = %ld err = %s", fSocket, strerror(errno));
             return -1;
         }
-    } else {
-        return 0;
+        udata += res;
+        len -= res;
     }
+
+    return 0;
 }
 
 JackServerSocket::JackServerSocket(): fSocket( -1)
