@@ -119,22 +119,32 @@ struct JackRequest
     virtual ~JackRequest()
     {}
 
-    virtual int Read(detail::JackChannelTransactionInterface* trans)
-    {
-        return trans->Read(&fType, sizeof(RequestType));
-    }
+    virtual int Read(detail::JackChannelTransactionInterface* trans) = 0;
 
-    virtual int Write(detail::JackChannelTransactionInterface* trans) { return -1; }
+    virtual int Write(detail::JackChannelTransactionInterface* trans) = 0;
 
-    virtual int Write(detail::JackChannelTransactionInterface* trans, int size)
+    virtual int Size() const = 0;
+
+    int Write(detail::JackChannelTransactionInterface* trans, int size)
     {
         fSize = size;
         CheckRes(trans->Write(&fType, sizeof(RequestType)));
         return trans->Write(&fSize, sizeof(int));
     }
 
-    virtual int Size() const { return 0; }
+};
 
+struct JackRequestHeader
+{
+    JackRequest::RequestType fType;
+
+    JackRequestHeader(): fType((JackRequest::RequestType)0)
+    {}
+
+    int Read(detail::JackChannelTransactionInterface* trans)
+    {
+        return trans->Read(&fType, sizeof(JackRequest::RequestType));
+    }
 };
 
 /*!

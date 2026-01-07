@@ -235,7 +235,7 @@ bool JackSocketServerChannel::Execute()
                 } else if (fPollTable[i].revents & POLLIN) {
                     JackClientSocket* socket = fSocketTable[fd].second;
                     // Decode header
-                    JackRequest header;
+                    JackRequestHeader header;
                     if (header.Read(socket) < 0) {
                         jack_log("JackSocketServerChannel::Execute : cannot decode header");
                         ClientKill(fd);

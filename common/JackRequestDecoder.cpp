@@ -58,7 +58,7 @@ int JackRequestDecoder::HandleRequest(detail::JackChannelTransactionInterface* s
             CheckWriteName("JackRequest::ClientCheck", socket);
             // Atomic ClientCheck followed by ClientOpen on same socket
             if (req.fOpen) {
-                JackRequest header;
+                JackRequestHeader header;
                 header.Read(socket);
                 return HandleRequest(socket, header.fType);
             }

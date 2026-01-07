@@ -83,7 +83,7 @@ bool JackClientPipeThread::Execute()
     try {
 
         jack_log("JackClientPipeThread::Execute %x", this);
-        JackRequest header;
+        JackRequestHeader header;
         int res = header.Read(fPipe);
         bool ret = true;
 
