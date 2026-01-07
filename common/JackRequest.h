@@ -35,6 +35,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 namespace Jack
 {
 
+#define JACK_CLIENT_NAME_SIZE_1 (JACK_CLIENT_NAME_SIZE + 1)
+#define JACK_LOAD_INIT_LIMIT_1 (JACK_LOAD_INIT_LIMIT + 1)
+#define JACK_MESSAGE_SIZE_1 (JACK_MESSAGE_SIZE + 1)
+#define JACK_PORT_NAME_SIZE_1 (JACK_PORT_NAME_SIZE + 1)
+#define JACK_PORT_TYPE_SIZE_1 (JACK_PORT_TYPE_SIZE + 1)
+#define REAL_JACK_PORT_NAME_SIZE_1 (REAL_JACK_PORT_NAME_SIZE + 1)
+
 #define CheckRes(exp) { \
     int reserr = (exp); \
     if (reserr < 0) { \
@@ -119,9 +126,6 @@ struct JackRequest
     virtual int Read(detail::JackChannelTransactionInterface* trans) = 0;
 
     virtual int Write(detail::JackChannelTransactionInterface* trans) = 0;
-
-    virtual int Size() const = 0;
-
 };
 
 struct JackRequestHeader : JackRequest
@@ -132,22 +136,19 @@ struct JackRequestHeader : JackRequest
 
     int Read(detail::JackChannelTransactionInterface* trans) override
     {
-        return trans->Read(&fType, sizeof(JackRequest::RequestType));
+        return trans->Read(&fType, sizeof(RequestType));
     }
 
     int Write(detail::JackChannelTransactionInterface* trans) override
     {
         return -1;
     }
-
-    int Size() const override
-    {
-        return 0;
-    }
 };
 
+template<int DataSize>
 struct JackRequestImpl : JackRequest
 {
+
     int fSize;
 
     JackRequestImpl(RequestType type)
@@ -160,6 +161,8 @@ struct JackRequestImpl : JackRequest
         CheckRes(trans->Write(&fType, sizeof(RequestType)));
         return trans->Write(&fSize, sizeof(int));
     }
+
+    int Size() const { return DataSize; }
 
 };
 
@@ -195,10 +198,10 @@ struct JackResult
 \brief CheckClient request.
 */
 
-struct JackClientCheckRequest : public JackRequestImpl
+struct JackClientCheckRequest : public JackRequestImpl<JACK_CLIENT_NAME_SIZE_1 + 3 * sizeof(int) + sizeof(jack_uuid_t)>
 {
 
-    char fName[JACK_CLIENT_NAME_SIZE+1];
+    char fName[JACK_CLIENT_NAME_SIZE_1];
     int fProtocol;
     int fOptions;
     int fOpen;
@@ -237,7 +240,7 @@ struct JackClientCheckRequest : public JackRequestImpl
         return trans->Write(&fOpen, sizeof(int));
     }
 
-    int Size() const override { return sizeof(fName) + 3 * sizeof(int) + sizeof(jack_uuid_t); }
+    static constexpr int Size() { return sizeof(fName) + 3 * sizeof(int) + sizeof(jack_uuid_t); }
 
 };
 
@@ -284,12 +287,12 @@ struct JackClientCheckResult : public JackResult
 \brief NewClient request.
 */
 
-struct JackClientOpenRequest : public JackRequestImpl
+struct JackClientOpenRequest : public JackRequestImpl<sizeof(int) + sizeof(jack_uuid_t) + JACK_CLIENT_NAME_SIZE_1>
 {
 
     int fPID;
     jack_uuid_t fUUID;
-    char fName[JACK_CLIENT_NAME_SIZE+1];
+    char fName[JACK_CLIENT_NAME_SIZE_1];
 
     JackClientOpenRequest()
         : JackRequestImpl(kClientOpen), fPID(0), fUUID(JACK_UUID_EMPTY_INITIALIZER)
@@ -321,8 +324,6 @@ struct JackClientOpenRequest : public JackRequestImpl
         CheckRes(trans->Write(&fUUID, sizeof(jack_uuid_t)));
         return trans->Write(&fName, sizeof(fName));
     }
-
-    int Size() const override { return sizeof(int) + sizeof(jack_uuid_t) + sizeof(fName); }
 
 };
 
@@ -368,7 +369,7 @@ struct JackClientOpenResult : public JackResult
 \brief CloseClient request.
 */
 
-struct JackClientCloseRequest : public JackRequestImpl
+struct JackClientCloseRequest : public JackRequestImpl<sizeof(int)>
 {
 
     int fRefNum;
@@ -393,14 +394,13 @@ struct JackClientCloseRequest : public JackRequestImpl
         return trans->Write(&fRefNum, sizeof(int));
     }
 
-    int Size() const override { return sizeof(int); }
 };
 
 /*!
 \brief Activate request.
 */
 
-struct JackActivateRequest : public JackRequestImpl
+struct JackActivateRequest : public JackRequestImpl<2 * sizeof(int)>
 {
 
     int fRefNum;
@@ -428,14 +428,13 @@ struct JackActivateRequest : public JackRequestImpl
         return trans->Write(&fIsRealTime, sizeof(int));
     }
 
-    int Size() const override { return 2 * sizeof(int); }
 };
 
 /*!
 \brief Deactivate request.
 */
 
-struct JackDeactivateRequest : public JackRequestImpl
+struct JackDeactivateRequest : public JackRequestImpl<sizeof(int)>
 {
 
     int fRefNum;
@@ -460,19 +459,18 @@ struct JackDeactivateRequest : public JackRequestImpl
         return trans->Write(&fRefNum, sizeof(int));
     }
 
-    int Size() const override { return sizeof(int); }
 };
 
 /*!
 \brief PortRegister request.
 */
 
-struct JackPortRegisterRequest : public JackRequestImpl
+struct JackPortRegisterRequest : public JackRequestImpl<sizeof(int) + JACK_PORT_NAME_SIZE_1 + JACK_PORT_TYPE_SIZE_1 + 2 * sizeof(unsigned int)>
 {
 
     int fRefNum;
-    char fName[JACK_PORT_NAME_SIZE + 1];   // port short name
-    char fPortType[JACK_PORT_TYPE_SIZE + 1];
+    char fName[JACK_PORT_NAME_SIZE_1];   // port short name
+    char fPortType[JACK_PORT_TYPE_SIZE_1];
     unsigned int fFlags;
     unsigned int fBufferSize;
 
@@ -514,8 +512,6 @@ struct JackPortRegisterRequest : public JackRequestImpl
         return 0;
     }
 
-    int Size() const override { return sizeof(int) + sizeof(fName) + sizeof(fPortType) + 2 * sizeof(unsigned int); }
-
 };
 
 /*!
@@ -548,7 +544,7 @@ struct JackPortRegisterResult : public JackResult
 \brief PortUnregister request.
 */
 
-struct JackPortUnRegisterRequest : public JackRequestImpl
+struct JackPortUnRegisterRequest : public JackRequestImpl<sizeof(int) + sizeof(jack_port_id_t)>
 {
 
     int fRefNum;
@@ -578,19 +574,18 @@ struct JackPortUnRegisterRequest : public JackRequestImpl
         return 0;
     }
 
-    int Size() const override { return sizeof(int) + sizeof(jack_port_id_t); }
 };
 
 /*!
 \brief PortConnectName request.
 */
 
-struct JackPortConnectNameRequest : public JackRequestImpl
+struct JackPortConnectNameRequest : public JackRequestImpl<sizeof(int) + 2 * REAL_JACK_PORT_NAME_SIZE_1>
 {
 
     int fRefNum;
-    char fSrc[REAL_JACK_PORT_NAME_SIZE+1];    // port full name
-    char fDst[REAL_JACK_PORT_NAME_SIZE+1];    // port full name
+    char fSrc[REAL_JACK_PORT_NAME_SIZE_1];    // port full name
+    char fDst[REAL_JACK_PORT_NAME_SIZE_1];    // port full name
 
     JackPortConnectNameRequest()
         : JackRequestImpl(kConnectNamePorts), fRefNum(0)
@@ -626,20 +621,18 @@ struct JackPortConnectNameRequest : public JackRequestImpl
         return 0;
     }
 
-    int Size() const override { return sizeof(int) + sizeof(fSrc) + sizeof(fDst); }
-
 };
 
 /*!
 \brief PortDisconnectName request.
 */
 
-struct JackPortDisconnectNameRequest : public JackRequestImpl
+struct JackPortDisconnectNameRequest : public JackRequestImpl<sizeof(int) + 2 * REAL_JACK_PORT_NAME_SIZE_1>
 {
 
     int fRefNum;
-    char fSrc[REAL_JACK_PORT_NAME_SIZE+1];    // port full name
-    char fDst[REAL_JACK_PORT_NAME_SIZE+1];    // port full name
+    char fSrc[REAL_JACK_PORT_NAME_SIZE_1];    // port full name
+    char fDst[REAL_JACK_PORT_NAME_SIZE_1];    // port full name
 
     JackPortDisconnectNameRequest()
         : JackRequestImpl(kDisconnectNamePorts), fRefNum(0)
@@ -675,15 +668,13 @@ struct JackPortDisconnectNameRequest : public JackRequestImpl
         return 0;
     }
 
-    int Size() const override { return sizeof(int) + sizeof(fSrc) + sizeof(fDst); }
-
 };
 
 /*!
 \brief PortConnect request.
 */
 
-struct JackPortConnectRequest : public JackRequestImpl
+struct JackPortConnectRequest : public JackRequestImpl<sizeof(int) + 2 * sizeof(jack_port_id_t)>
 {
 
     int fRefNum;
@@ -716,14 +707,13 @@ struct JackPortConnectRequest : public JackRequestImpl
         return 0;
     }
 
-    int Size() const override { return sizeof(int) + sizeof(jack_port_id_t) + sizeof(jack_port_id_t); }
 };
 
 /*!
 \brief PortDisconnect request.
 */
 
-struct JackPortDisconnectRequest : public JackRequestImpl
+struct JackPortDisconnectRequest : public JackRequestImpl<sizeof(int) + 2 * sizeof(jack_port_id_t)>
 {
 
     int fRefNum;
@@ -756,19 +746,18 @@ struct JackPortDisconnectRequest : public JackRequestImpl
         return 0;
     }
 
-    int Size() const override { return sizeof(int) + sizeof(jack_port_id_t) + sizeof(jack_port_id_t); }
 };
 
 /*!
 \brief PortRename request.
 */
 
-struct JackPortRenameRequest : public JackRequestImpl
+struct JackPortRenameRequest : public JackRequestImpl<sizeof(int) + sizeof(jack_port_id_t) + JACK_PORT_NAME_SIZE_1>
 {
 
     int fRefNum;
     jack_port_id_t fPort;
-    char fName[JACK_PORT_NAME_SIZE + 1];   // port short name
+    char fName[JACK_PORT_NAME_SIZE_1];   // port short name
 
     JackPortRenameRequest()
         : JackRequestImpl(kPortRename), fRefNum(0), fPort(0)
@@ -801,15 +790,13 @@ struct JackPortRenameRequest : public JackRequestImpl
         return 0;
     }
 
-    int Size() const override { return sizeof(int) + sizeof(jack_port_id_t) + sizeof(fName); }
-
 };
 
 /*!
 \brief SetBufferSize request.
 */
 
-struct JackSetBufferSizeRequest : public JackRequestImpl
+struct JackSetBufferSizeRequest : public JackRequestImpl<sizeof(jack_nframes_t)>
 {
 
     jack_nframes_t fBufferSize;
@@ -834,14 +821,13 @@ struct JackSetBufferSizeRequest : public JackRequestImpl
         return trans->Write(&fBufferSize, sizeof(jack_nframes_t));
     }
 
-    int Size() const override { return sizeof(jack_nframes_t); }
 };
 
 /*!
 \brief SetFreeWheel request.
 */
 
-struct JackSetFreeWheelRequest : public JackRequestImpl
+struct JackSetFreeWheelRequest : public JackRequestImpl<sizeof(int)>
 {
 
     int fOnOff;
@@ -866,15 +852,13 @@ struct JackSetFreeWheelRequest : public JackRequestImpl
         return trans->Write(&fOnOff, sizeof(int));
     }
 
-    int Size() const override { return sizeof(int); }
-
 };
 
 /*!
 \brief ComputeTotalLatencies request.
 */
 
-struct JackComputeTotalLatenciesRequest : public JackRequestImpl
+struct JackComputeTotalLatenciesRequest : public JackRequestImpl<0>
 {
 
     JackComputeTotalLatenciesRequest()
@@ -893,14 +877,13 @@ struct JackComputeTotalLatenciesRequest : public JackRequestImpl
         return 0;
     }
 
-    int Size() const override { return 0; }
 };
 
 /*!
 \brief ReleaseTimebase request.
 */
 
-struct JackReleaseTimebaseRequest : public JackRequestImpl
+struct JackReleaseTimebaseRequest : public JackRequestImpl<sizeof(int)>
 {
 
     int fRefNum;
@@ -925,15 +908,13 @@ struct JackReleaseTimebaseRequest : public JackRequestImpl
         return trans->Write(&fRefNum, sizeof(int));
     }
 
-    int Size() const override { return sizeof(int); }
-
 };
 
 /*!
 \brief SetTimebaseCallback request.
 */
 
-struct JackSetTimebaseCallbackRequest : public JackRequestImpl
+struct JackSetTimebaseCallbackRequest : public JackRequestImpl<sizeof(int) + sizeof(int)>
 {
 
     int fRefNum;
@@ -961,14 +942,13 @@ struct JackSetTimebaseCallbackRequest : public JackRequestImpl
         return trans->Write(&fConditionnal, sizeof(int));
     }
 
-    int Size() const override { return sizeof(int) + sizeof(int); }
 };
 
 /*!
 \brief GetInternalClientName request.
 */
 
-struct JackGetInternalClientNameRequest : public JackRequestImpl
+struct JackGetInternalClientNameRequest : public JackRequestImpl<sizeof(int) + sizeof(int)>
 {
 
     int fRefNum;
@@ -996,7 +976,6 @@ struct JackGetInternalClientNameRequest : public JackRequestImpl
         return trans->Write(&fIntRefNum, sizeof(int));
     }
 
-    int Size() const override { return sizeof(int) + sizeof(int); }
 };
 
 /*!
@@ -1040,11 +1019,11 @@ struct JackGetInternalClientNameResult : public JackResult
 \brief InternalClientHandle request.
 */
 
-struct JackInternalClientHandleRequest : public JackRequestImpl
+struct JackInternalClientHandleRequest : public JackRequestImpl<sizeof(int) + JACK_CLIENT_NAME_SIZE_1>
 {
 
     int fRefNum;
-    char fName[JACK_CLIENT_NAME_SIZE+1];
+    char fName[JACK_CLIENT_NAME_SIZE_1];
 
     JackInternalClientHandleRequest()
         : JackRequestImpl(kInternalClientHandle), fRefNum(0)
@@ -1073,7 +1052,6 @@ struct JackInternalClientHandleRequest : public JackRequestImpl
         return trans->Write(&fName, sizeof(fName));
     }
 
-    int Size() const override { return sizeof(int) + sizeof(fName); }
 };
 
 /*!
@@ -1115,17 +1093,18 @@ struct JackInternalClientHandleResult : public JackResult
 \brief InternalClientLoad request.
 */
 
-struct JackInternalClientLoadRequest : public JackRequestImpl
-{
-
 #ifndef MAX_PATH
 #define MAX_PATH 256
 #endif
+#define MAX_PATH_1 (MAX_PATH + 1)
+
+struct JackInternalClientLoadRequest : public JackRequestImpl<sizeof(int) + JACK_CLIENT_NAME_SIZE_1 + MAX_PATH_1 + JACK_LOAD_INIT_LIMIT_1 + sizeof(int) + sizeof(jack_uuid_t)>
+{
 
     int fRefNum;
-    char fName[JACK_CLIENT_NAME_SIZE+1];
-    char fDllName[MAX_PATH+1];
-    char fLoadInitName[JACK_LOAD_INIT_LIMIT+1];
+    char fName[JACK_CLIENT_NAME_SIZE_1];
+    char fDllName[MAX_PATH_1];
+    char fLoadInitName[JACK_LOAD_INIT_LIMIT_1];
     int fOptions;
     jack_uuid_t fUUID;
 
@@ -1174,7 +1153,6 @@ struct JackInternalClientLoadRequest : public JackRequestImpl
         return trans->Write(&fOptions, sizeof(int));
     }
 
-    int Size() const override { return sizeof(int) + sizeof(fName) + sizeof(fDllName) + sizeof(fLoadInitName) + sizeof(int) + sizeof(jack_uuid_t); }
 };
 
 /*!
@@ -1216,7 +1194,7 @@ struct JackInternalClientLoadResult : public JackResult
 \brief InternalClientUnload request.
 */
 
-struct JackInternalClientUnloadRequest : public JackRequestImpl
+struct JackInternalClientUnloadRequest : public JackRequestImpl<sizeof(int) + sizeof(int)>
 {
 
     int fRefNum;
@@ -1244,7 +1222,6 @@ struct JackInternalClientUnloadRequest : public JackRequestImpl
         return trans->Write(&fIntRefNum, sizeof(int));
     }
 
-    int Size() const override { return sizeof(int) + sizeof(int); }
 };
 
 /*!
@@ -1283,7 +1260,7 @@ struct JackInternalClientUnloadResult : public JackResult
 \brief ClientNotification request.
 */
 
-struct JackClientNotificationRequest : public JackRequestImpl
+struct JackClientNotificationRequest : public JackRequestImpl<3 * sizeof(int)>
 {
 
     int fRefNum;
@@ -1315,8 +1292,6 @@ struct JackClientNotificationRequest : public JackRequestImpl
         CheckRes(trans->Write(&fValue, sizeof(int)));
         return 0;
     }
-
-    int Size() const override { return 3 * sizeof(int); }
 
 };
 
@@ -1438,10 +1413,10 @@ struct JackSessionNotifyResult : public JackResult
 \brief SessionNotify request.
 */
 
-struct JackSessionNotifyRequest : public JackRequestImpl
+struct JackSessionNotifyRequest : public JackRequestImpl<JACK_MESSAGE_SIZE_1 + JACK_CLIENT_NAME_SIZE_1 + sizeof(jack_session_event_type_t) + sizeof(int)>
 {
-    char fPath[JACK_MESSAGE_SIZE+1];
-    char fDst[JACK_CLIENT_NAME_SIZE+1];
+    char fPath[JACK_MESSAGE_SIZE_1];
+    char fDst[JACK_CLIENT_NAME_SIZE_1];
     jack_session_event_type_t fEventType;
     int fRefNum;
 
@@ -1480,10 +1455,9 @@ struct JackSessionNotifyRequest : public JackRequestImpl
         return 0;
     }
 
-    int Size() const override { return sizeof(fRefNum) + sizeof(fPath) + sizeof(fDst) + sizeof(fEventType); }
 };
 
-struct JackSessionReplyRequest : public JackRequestImpl
+struct JackSessionReplyRequest : public JackRequestImpl<sizeof(int)>
 {
     int fRefNum;
 
@@ -1508,8 +1482,6 @@ struct JackSessionReplyRequest : public JackRequestImpl
         CheckRes(trans->Write(&fRefNum, sizeof(int)));
         return 0;
     }
-
-    int Size() const override { return sizeof(int); }
 
 };
 
@@ -1575,9 +1547,9 @@ struct JackUUIDResult : public JackResult
 
 };
 
-struct JackGetUUIDRequest : public JackRequestImpl
+struct JackGetUUIDRequest : public JackRequestImpl<JACK_CLIENT_NAME_SIZE_1>
 {
-    char fName[JACK_CLIENT_NAME_SIZE+1];
+    char fName[JACK_CLIENT_NAME_SIZE_1];
 
     JackGetUUIDRequest()
         : JackRequestImpl(kGetUUIDByClient)
@@ -1606,11 +1578,9 @@ struct JackGetUUIDRequest : public JackRequestImpl
         return 0;
     }
 
-    int Size() const override { return sizeof(fName); }
-
 };
 
-struct JackGetClientNameRequest : public JackRequestImpl
+struct JackGetClientNameRequest : public JackRequestImpl<JACK_UUID_STRING_SIZE>
 {
     char fUUID[JACK_UUID_STRING_SIZE];
 
@@ -1641,14 +1611,12 @@ struct JackGetClientNameRequest : public JackRequestImpl
         return 0;
     }
 
-    int Size() const override { return sizeof(fUUID); }
-
 };
 
-struct JackReserveNameRequest : public JackRequestImpl
+struct JackReserveNameRequest : public JackRequestImpl<sizeof(int) + JACK_CLIENT_NAME_SIZE_1 + JACK_UUID_STRING_SIZE>
 {
     int  fRefNum;
-    char fName[JACK_CLIENT_NAME_SIZE+1];
+    char fName[JACK_CLIENT_NAME_SIZE_1];
     char fUUID[JACK_UUID_STRING_SIZE];
 
     JackReserveNameRequest()
@@ -1685,13 +1653,11 @@ struct JackReserveNameRequest : public JackRequestImpl
         return 0;
     }
 
-    int Size() const override { return sizeof(fUUID) + sizeof(fName) + sizeof(fRefNum); }
-
 };
 
-struct JackClientHasSessionCallbackRequest : public JackRequestImpl
+struct JackClientHasSessionCallbackRequest : public JackRequestImpl<JACK_CLIENT_NAME_SIZE_1>
 {
-    char fName[JACK_CLIENT_NAME_SIZE+1];
+    char fName[JACK_CLIENT_NAME_SIZE_1];
 
     JackClientHasSessionCallbackRequest()
         : JackRequestImpl(kClientHasSessionCallback)
@@ -1720,15 +1686,13 @@ struct JackClientHasSessionCallbackRequest : public JackRequestImpl
         return 0;
     }
 
-    int Size() const override { return sizeof(fName); }
-
 };
 
 
-struct JackPropertyChangeNotifyRequest : public JackRequestImpl
+struct JackPropertyChangeNotifyRequest : public JackRequestImpl<sizeof(jack_uuid_t) + MAX_PATH_1 + sizeof(jack_property_change_t)>
 {
     jack_uuid_t fSubject;
-    char fKey[MAX_PATH+1];
+    char fKey[MAX_PATH_1];
     jack_property_change_t fChange;
 
     JackPropertyChangeNotifyRequest()
@@ -1765,7 +1729,6 @@ struct JackPropertyChangeNotifyRequest : public JackRequestImpl
         return 0;
     }
 
-    int Size() const override { return sizeof(fSubject) + sizeof(fKey) + sizeof(fChange); }
 };
 
 /*!
