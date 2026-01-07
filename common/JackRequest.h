@@ -133,7 +133,7 @@ struct JackRequest
         return trans->Write(&fSize, sizeof(int));
     }
 
-    virtual int Size() { return 0; }
+    virtual int Size() const { return 0; }
 
 };
 
@@ -209,7 +209,7 @@ struct JackClientCheckRequest : public JackRequest
         return trans->Write(&fOpen, sizeof(int));
     }
 
-    int Size() { return sizeof(fName) + 3 * sizeof(int) + sizeof(jack_uuid_t); }
+    int Size() const { return sizeof(fName) + 3 * sizeof(int) + sizeof(jack_uuid_t); }
 
 };
 
@@ -291,7 +291,7 @@ struct JackClientOpenRequest : public JackRequest
         return trans->Write(&fName, sizeof(fName));
     }
 
-    int Size() { return sizeof(int) + sizeof(jack_uuid_t) + sizeof(fName); }
+    int Size() const { return sizeof(int) + sizeof(jack_uuid_t) + sizeof(fName); }
 
 };
 
@@ -359,7 +359,7 @@ struct JackClientCloseRequest : public JackRequest
         return trans->Write(&fRefNum, sizeof(int));
     }
 
-    int Size() { return sizeof(int); }
+    int Size() const { return sizeof(int); }
 };
 
 /*!
@@ -392,7 +392,7 @@ struct JackActivateRequest : public JackRequest
         return trans->Write(&fIsRealTime, sizeof(int));
     }
 
-    int Size() { return 2 * sizeof(int); }
+    int Size() const { return 2 * sizeof(int); }
 };
 
 /*!
@@ -421,7 +421,7 @@ struct JackDeactivateRequest : public JackRequest
         return trans->Write(&fRefNum, sizeof(int));
     }
 
-    int Size() { return sizeof(int); }
+    int Size() const { return sizeof(int); }
 };
 
 /*!
@@ -473,7 +473,7 @@ struct JackPortRegisterRequest : public JackRequest
         return 0;
     }
 
-    int Size() { return sizeof(int) + sizeof(fName) + sizeof(fPortType) + 2 * sizeof(unsigned int); }
+    int Size() const { return sizeof(int) + sizeof(fName) + sizeof(fPortType) + 2 * sizeof(unsigned int); }
 
 };
 
@@ -535,7 +535,7 @@ struct JackPortUnRegisterRequest : public JackRequest
         return 0;
     }
 
-    int Size() { return sizeof(int) + sizeof(jack_port_id_t); }
+    int Size() const { return sizeof(int) + sizeof(jack_port_id_t); }
 };
 
 /*!
@@ -581,7 +581,7 @@ struct JackPortConnectNameRequest : public JackRequest
         return 0;
     }
 
-    int Size() { return sizeof(int) + sizeof(fSrc) + sizeof(fDst); }
+    int Size() const { return sizeof(int) + sizeof(fSrc) + sizeof(fDst); }
 
 };
 
@@ -628,7 +628,7 @@ struct JackPortDisconnectNameRequest : public JackRequest
         return 0;
     }
 
-    int Size() { return sizeof(int) + sizeof(fSrc) + sizeof(fDst); }
+    int Size() const { return sizeof(int) + sizeof(fSrc) + sizeof(fDst); }
 
 };
 
@@ -667,7 +667,7 @@ struct JackPortConnectRequest : public JackRequest
         return 0;
     }
 
-    int Size() { return sizeof(int) + sizeof(jack_port_id_t) + sizeof(jack_port_id_t); }
+    int Size() const { return sizeof(int) + sizeof(jack_port_id_t) + sizeof(jack_port_id_t); }
 };
 
 /*!
@@ -705,7 +705,7 @@ struct JackPortDisconnectRequest : public JackRequest
         return 0;
     }
 
-    int Size() { return sizeof(int) + sizeof(jack_port_id_t) + sizeof(jack_port_id_t); }
+    int Size() const { return sizeof(int) + sizeof(jack_port_id_t) + sizeof(jack_port_id_t); }
 };
 
 /*!
@@ -748,7 +748,7 @@ struct JackPortRenameRequest : public JackRequest
         return 0;
     }
 
-    int Size() { return sizeof(int) + sizeof(jack_port_id_t) + sizeof(fName); }
+    int Size() const { return sizeof(int) + sizeof(jack_port_id_t) + sizeof(fName); }
 
 };
 
@@ -779,7 +779,7 @@ struct JackSetBufferSizeRequest : public JackRequest
         return trans->Write(&fBufferSize, sizeof(jack_nframes_t));
     }
 
-    int Size() { return sizeof(jack_nframes_t); }
+    int Size() const { return sizeof(jack_nframes_t); }
 };
 
 /*!
@@ -809,7 +809,7 @@ struct JackSetFreeWheelRequest : public JackRequest
         return trans->Write(&fOnOff, sizeof(int));
     }
 
-    int Size() { return sizeof(int); }
+    int Size() const { return sizeof(int); }
 
 };
 
@@ -836,7 +836,7 @@ struct JackComputeTotalLatenciesRequest : public JackRequest
         return 0;
     }
 
-    int Size() { return 0; }
+    int Size() const { return 0; }
 };
 
 /*!
@@ -866,7 +866,7 @@ struct JackReleaseTimebaseRequest : public JackRequest
         return trans->Write(&fRefNum, sizeof(int));
     }
 
-    int Size() { return sizeof(int); }
+    int Size() const { return sizeof(int); }
 
 };
 
@@ -900,7 +900,7 @@ struct JackSetTimebaseCallbackRequest : public JackRequest
         return trans->Write(&fConditionnal, sizeof(int));
     }
 
-    int Size() { return sizeof(int) + sizeof(int); }
+    int Size() const { return sizeof(int) + sizeof(int); }
 };
 
 /*!
@@ -933,7 +933,7 @@ struct JackGetInternalClientNameRequest : public JackRequest
         return trans->Write(&fIntRefNum, sizeof(int));
     }
 
-    int Size() { return sizeof(int) + sizeof(int); }
+    int Size() const { return sizeof(int) + sizeof(int); }
 };
 
 /*!
@@ -970,7 +970,7 @@ struct JackGetInternalClientNameResult : public JackResult
         return 0;
     }
 
-    int Size() { return sizeof(fName); }
+    int Size() const { return sizeof(fName); }
 };
 
 /*!
@@ -1008,7 +1008,7 @@ struct JackInternalClientHandleRequest : public JackRequest
         return trans->Write(&fName, sizeof(fName));
     }
 
-    int Size() { return sizeof(int) + sizeof(fName); }
+    int Size() const { return sizeof(int) + sizeof(fName); }
 };
 
 /*!
@@ -1043,7 +1043,7 @@ struct JackInternalClientHandleResult : public JackResult
         return 0;
     }
 
-    int Size() { return sizeof(int) + sizeof(int); }
+    int Size() const { return sizeof(int) + sizeof(int); }
 };
 
 /*!
@@ -1107,7 +1107,7 @@ struct JackInternalClientLoadRequest : public JackRequest
         return trans->Write(&fOptions, sizeof(int));
     }
 
-    int Size() { return sizeof(int) + sizeof(fName) + sizeof(fDllName) + sizeof(fLoadInitName) + sizeof(int) + sizeof(jack_uuid_t); }
+    int Size() const { return sizeof(int) + sizeof(fName) + sizeof(fDllName) + sizeof(fLoadInitName) + sizeof(int) + sizeof(jack_uuid_t); }
 };
 
 /*!
@@ -1142,7 +1142,7 @@ struct JackInternalClientLoadResult : public JackResult
         return 0;
     }
 
-    int Size() { return sizeof(int) + sizeof(int); }
+    int Size() const { return sizeof(int) + sizeof(int); }
 };
 
 /*!
@@ -1175,7 +1175,7 @@ struct JackInternalClientUnloadRequest : public JackRequest
         return trans->Write(&fIntRefNum, sizeof(int));
     }
 
-    int Size() { return sizeof(int) + sizeof(int); }
+    int Size() const { return sizeof(int) + sizeof(int); }
 };
 
 /*!
@@ -1207,7 +1207,7 @@ struct JackInternalClientUnloadResult : public JackResult
         return 0;
     }
 
-    int Size() { return sizeof(int); }
+    int Size() const { return sizeof(int); }
 };
 
 /*!
@@ -1245,7 +1245,7 @@ struct JackClientNotificationRequest : public JackRequest
         return 0;
     }
 
-    int Size() { return 3 * sizeof(int); }
+    int Size() const { return 3 * sizeof(int); }
 
 };
 
@@ -1407,7 +1407,7 @@ struct JackSessionNotifyRequest : public JackRequest
         return 0;
     }
 
-    int Size() { return sizeof(fRefNum) + sizeof(fPath) + sizeof(fDst) + sizeof(fEventType); }
+    int Size() const { return sizeof(fRefNum) + sizeof(fPath) + sizeof(fDst) + sizeof(fEventType); }
 };
 
 struct JackSessionReplyRequest : public JackRequest
@@ -1435,7 +1435,7 @@ struct JackSessionReplyRequest : public JackRequest
         return 0;
     }
 
-    int Size() { return sizeof(int); }
+    int Size() const { return sizeof(int); }
 
 };
 
@@ -1531,7 +1531,7 @@ struct JackGetUUIDRequest : public JackRequest
         return 0;
     }
 
-    int Size() { return sizeof(fName); }
+    int Size() const { return sizeof(fName); }
 
 };
 
@@ -1565,7 +1565,7 @@ struct JackGetClientNameRequest : public JackRequest
         return 0;
     }
 
-    int Size() { return sizeof(fUUID); }
+    int Size() const { return sizeof(fUUID); }
 
 };
 
@@ -1608,7 +1608,7 @@ struct JackReserveNameRequest : public JackRequest
         return 0;
     }
 
-    int Size() { return sizeof(fUUID) + sizeof(fName) + sizeof(fRefNum); }
+    int Size() const { return sizeof(fUUID) + sizeof(fName) + sizeof(fRefNum); }
 
 };
 
@@ -1642,7 +1642,7 @@ struct JackClientHasSessionCallbackRequest : public JackRequest
         return 0;
     }
 
-    int Size() { return sizeof(fName); }
+    int Size() const { return sizeof(fName); }
 
 };
 
@@ -1685,7 +1685,7 @@ struct JackPropertyChangeNotifyRequest : public JackRequest
         return 0;
     }
 
-    int Size() { return sizeof(fSubject) + sizeof(fKey) + sizeof(fChange); }
+    int Size() const { return sizeof(fSubject) + sizeof(fKey) + sizeof(fChange); }
 };
 
 /*!
@@ -1746,7 +1746,7 @@ struct JackClientNotification
         return 0;
     }
 
-    int Size() { return sizeof(int) + sizeof(fName) + 5 * sizeof(int) + sizeof(fMessage); }
+    int Size() const { return sizeof(int) + sizeof(fName) + 5 * sizeof(int) + sizeof(fMessage); }
 
 };
 
