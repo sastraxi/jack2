@@ -46,7 +46,7 @@ namespace Jack
     int reserr = (exp); \
     if (reserr < 0) { \
         if (reserr != JACK_REQUEST_ERR_ABORTED) \
-            jack_error("CheckRes error"); \
+            jack_error("CheckRes error for " #exp "in %s", __PRETTY_FUNCTION__); \
         return reserr; \
     } \
 }

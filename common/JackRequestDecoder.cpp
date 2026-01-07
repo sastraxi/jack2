@@ -347,7 +347,7 @@ int JackRequestDecoder::HandleRequest(detail::JackChannelTransactionInterface* s
         }
 
         default:
-            jack_error("Unknown request %ld", type);
+            jack_error("Unknown request %d", type_aux);
             return -1;
     }
 
