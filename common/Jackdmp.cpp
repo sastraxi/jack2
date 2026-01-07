@@ -94,10 +94,10 @@ static void notify_server_stop(const char* server_name)
 
 static void copyright(FILE* file)
 {
-    fprintf(file, "jackdmp " VERSION "\n"
+    fprintf(file, "jackdmp " JACK_VERSION "\n"
             "Copyright 2001-2005 Paul Davis and others.\n"
             "Copyright 2004-2016 Grame.\n"
-            "Copyright 2016-2023 Filipe Coelho.\n"
+            "Copyright 2016-2026 Filipe Coelho.\n"
             "jackdmp comes with ABSOLUTELY NO WARRANTY\n"
             "This is free software, and you are welcome to redistribute it\n"
             "under certain conditions; see the file COPYING for details\n");
@@ -250,7 +250,7 @@ extern "C" void silent_jack_error_callback(const char *desc);
 
 void print_version()
 {
-    printf( "jackdmp version " VERSION " tmpdir "
+    printf( "jackdmp version " JACK_VERSION " tmpdir "
             jack_server_dir " protocol %d" "\n",
             JACK_PROTOCOL_VERSION);
 }

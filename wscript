@@ -438,6 +438,7 @@ def configure(conf):
         conf.define('JACK_DBUS', 1)
     if conf.env['BUILD_WITH_PROFILE']:
         conf.define('JACK_MONITOR', 1)
+    conf.define('JACK_VERSION', VERSION)
     conf.write_config_header('config.h', remove=False)
 
     if Options.options.mixed:

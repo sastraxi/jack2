@@ -1929,7 +1929,7 @@ LIB_EXPORT void jack_get_version(int *major_ptr,
 LIB_EXPORT const char* jack_get_version_string()
 {
     JackGlobals::CheckContext("jack_get_version_string");
-    return VERSION;
+    return JACK_VERSION;
 }
 
 LIB_EXPORT void jack_free(void* ptr)
