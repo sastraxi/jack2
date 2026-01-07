@@ -8,8 +8,8 @@ on:
     branches:
       - '*'
 env:
-  CACHE_VERSION: 20250801
-  PAWPAW_VERSION: 8b1198b3b9c7f01d4466e82d2cc6947da855d594
+  CACHE_VERSION: 20260107
+  PAWPAW_VERSION: dd0fd459be75110d76b633e606a1a1dbc607b2ab
   PAWPAW_SKIP_LTO: 1
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         target: [intel, universal]
-    runs-on: macos-13
+    runs-on: macos-14
     steps:
     - uses: actions/checkout@v4
       with:
