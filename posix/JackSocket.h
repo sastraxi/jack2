@@ -45,6 +45,7 @@ class JackClientSocket : public detail::JackClientRequestInterface
 
         int fSocket;
         int fTimeOut;
+        bool fNonBlocking;
         bool fPromiscuous;
         int fPromiscuousGid;
 
