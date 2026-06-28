@@ -91,6 +91,15 @@ namespace Jack
             // wrong one via the unicast default route. Pass NULL or "" to
             // keep the legacy INADDR_ANY behavior.
             int JoinMCastGroup(const char* mcast_ip, const char* ifname);
+            // Pin the outgoing interface for multicast packets. Slave side:
+            // sendto() to the multicast group will go out this interface
+            // regardless of what the kernel's unicast/multicast route table
+            // says. Required on hosts whose default route is on the wrong
+            // interface (e.g. wifi) but whose netJACK2 link is on a different
+            // one (e.g. direct-cable eth0/en7). ifname == NULL or "" is a
+            // no-op so the legacy behavior (kernel chooses interface) is
+            // preserved when the env var is unset.
+            int SetMulticastIF(const char* ifname);
 
             //options management
             int SetOption(int level, int optname, const void* optval, socklen_t optlen);

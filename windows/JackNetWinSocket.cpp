@@ -291,6 +291,16 @@ namespace Jack
         return SetOption(IPPROTO_IP, 12, &multicast_req, sizeof(multicast_req));
     }
 
+    int JackNetWinSocket::SetMulticastIF(const char* ifname)
+    {
+        // No-op on Windows; the kernel picks the outgoing interface based on
+        // its routing table. The JackNetUnixSocket.h header documents the
+        // Linux/macOS path; Windows would need WSAIoctl(SIO_MULTIPOINT_LOOP)
+        // or a pre-bind for parity, but netJACK2 is not used on Windows.
+        (void)ifname;
+        return 0;
+    }
+
     //options************************************************************************************************************
     int JackNetWinSocket::SetOption(int level, int optname, const void* optval, SOCKLEN optlen)
     {

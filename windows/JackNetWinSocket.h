@@ -89,6 +89,9 @@ namespace Jack
             // The Windows socket backend doesn't currently honor ifname; it
             // delegates to JoinMCastGroup(mcast_ip) for backwards compat.
             int JoinMCastGroup(const char* mcast_ip, const char* ifname);
+            // Slave-side outgoing interface pin. See JackNetUnixSocket.h.
+            // No-op on Windows; the legacy kernel-picks behavior is preserved.
+            int SetMulticastIF(const char* ifname);
 
             //options management
             int SetOption(int level, int optname, const void* optval, SOCKLEN optlen);

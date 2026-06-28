@@ -306,6 +306,42 @@ namespace Jack
 #endif
     }
 
+    int JackNetUnixSocket::SetMulticastIF(const char* ifname)
+    {
+        if (ifname == NULL || ifname[0] == '\0') {
+            // No env var set; let the kernel pick the outgoing interface for
+            // multicast sendto via its multicast route table.
+            return 0;
+        }
+
+        int idx = if_nametoindex(ifname);
+        if (idx == 0) {
+            NET_ERROR_CODE = ENODEV;
+            jack_error("SetMulticastIF: if_nametoindex(%s) failed: %s",
+                       ifname, strerror(NET_ERROR_CODE));
+            return SOCKET_ERROR;
+        }
+
+#if defined(__linux__)
+        // Linux: IP_MULTICAST_IF with a 4-byte in_addr expects an interface
+        // IPv4 address (the kernel still has to look it up); pass a 12-byte
+        // ip_mreqn instead and the kernel uses imr_ifindex directly. This
+        // matches the JoinMCastGroup path.
+        struct ip_mreqn mreqn;
+        memset(&mreqn, 0, sizeof(mreqn));
+        mreqn.imr_ifindex = idx;
+        return SetOption(IPPROTO_IP, IP_MULTICAST_IF, &mreqn, sizeof(mreqn));
+#else
+        // macOS / BSD: IP_BOUND_IF sets both the bind interface and the
+        // multicast outgoing interface in one call. Setsockopt level
+        // IPPROTO_IP, optname IP_BOUND_IF, optval is an unsigned int ifindex.
+        // We deliberately set this for slave sendto as well as the master
+        // join, even though JoinMCastGroup would also do it; the slave never
+        // calls JoinMCastGroup, so this is the slave's only pin point.
+        return SetOption(IPPROTO_IP, IP_BOUND_IF, &idx, sizeof(idx));
+#endif
+    }
+
     //options************************************************************************************************************
     int JackNetUnixSocket::SetOption(int level, int optname, const void* optval, socklen_t optlen)
     {

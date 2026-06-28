@@ -16,6 +16,15 @@ ChangeLog
     ``struct ip_mreqn`` with ``imr_ifindex``; macOS/BSD uses
     ``IP_BOUND_IF``; the legacy ``INADDR_ANY`` path is preserved when
     the env var is unset.
+  * netadapter (slave): also pin the *outgoing* interface for multicast
+    ``sendto()`` to ``JACK_NETJACK_MULTICAST_IF``. Hosts whose default
+    route is on the wrong interface (e.g. wifi) but whose netJACK2 link
+    is on a different one (e.g. direct-cable eth0) need this on the
+    slave too, otherwise the slave's discovery packets leave on the
+    default route and never reach the master's IP_ADD_MEMBERSHIP-bound
+    interface. New ``JackNetSocket::SetMulticastIF(ifname)`` method;
+    no-op when ``ifname`` is empty, preserving the legacy
+    kernel-route-table behavior.
 
 * 1.9.22 (2023-02-02)
 

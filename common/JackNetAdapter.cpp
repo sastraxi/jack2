@@ -129,8 +129,23 @@ namespace Jack
 
         strcpy(fMulticastIP, multicast_ip);
 
+        // Pin the outgoing multicast interface (slave side). Required on
+        // hosts where the kernel's default route is on the wrong interface
+        // (e.g. wifi) but the netJACK2 link is on a different one (e.g.
+        // direct-cable eth0). Without this, the slave's sendto() to the
+        // multicast group goes out the default route, never reaches the
+        // master's IP_ADD_MEMBERSHIP-bound interface, and discovery times
+        // out. Empty / unset = kernel's multicast route table wins.
+        fMulticastIF[0] = '\0';
+        const char* multicast_if = getenv("JACK_NETJACK_MULTICAST_IF");
+        if (multicast_if) {
+            strncpy(fMulticastIF, multicast_if, sizeof(fMulticastIF) - 1);
+            fMulticastIF[sizeof(fMulticastIF) - 1] = '\0';
+        }
+
         // Set the socket parameters
         fSocket.SetPort(udp_port);
+        fSocket.SetMulticastIF(fMulticastIF);
         fSocket.SetAddress(fMulticastIP, udp_port);
 
         // If not set, takes default
