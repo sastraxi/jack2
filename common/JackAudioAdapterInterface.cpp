@@ -177,6 +177,13 @@ namespace Jack
         for (int i = 0; i < fPlaybackChannels; i++) {
             fPlaybackRingBuffer[i]->Reset(fRingbufferCurSize);
         }
+        // Reset PI controller integrator. Upstream's OurOfBounds() exists
+        // for this purpose (JackFilters.h:333) but has zero call sites in
+        // 1.9.22, so the integral accumulates unbounded across ring resets
+        // and biases the resample ratio further from the true static factor
+        // on each cycle. See ../JackRouter/docs/JACK-BUG.md for the full
+        // failure-mode analysis.
+        fPIControler.OurOfBounds();
     }
 
     void JackAudioAdapterInterface::Reset()
