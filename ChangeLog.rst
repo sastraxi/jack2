@@ -18,13 +18,20 @@ ChangeLog
     the env var is unset.
   * netadapter (slave): also pin the *outgoing* interface for multicast
     ``sendto()`` to ``JACK_NETJACK_MULTICAST_IF``. Hosts whose default
-    route is on the wrong interface (e.g. wifi) but whose netJACK2 link
-    is on a different one (e.g. direct-cable eth0) need this on the
-    slave too, otherwise the slave's discovery packets leave on the
-    default route and never reach the master's IP_ADD_MEMBERSHIP-bound
-    interface. New ``JackNetSocket::SetMulticastIF(ifname)`` method;
-    no-op when ``ifname`` is empty, preserving the legacy
+    route is on the wrong iface (e.g. wifi) but whose netJACK2 link
+    is on a different one (e.g. direct-cable eth0/en7) need this on
+    the slave too, otherwise the slave's discovery packets leave on
+    the default route and never reach the master's IP_ADD_MEMBERSHIP-
+    bound interface. New ``JackNetSocket::SetMulticastIF(ifname)``
+    method; no-op when ``ifname`` is empty, preserving the legacy
     kernel-route-table behavior.
+  * ``build-macos-pkg.sh`` — produces a ``.pkg`` installer that drops
+    the fork's binaries, libs, headers, and intclient ``.so``s into
+    ``/usr/local`` on Apple Silicon (the manual-install prefix; Homebrew
+    is at ``/opt/homebrew``). Required because ``installer/build-pkg.sh``
+    in the JackRouter repo ``check_jack``s a pre-installed jack2 and
+    refuses to build without one — without this, fresh JackRouter users
+    on Apple Silicon have no way to get the multicast-pin code.
 
 * 1.9.22 (2023-02-02)
 
