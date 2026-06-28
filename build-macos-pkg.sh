@@ -67,16 +67,13 @@ LDFLAGS="-L/opt/homebrew/lib" \
 
 echo
 echo "==> install to staging dir"
-# Install to a private staging tree so we don't trash the host's /usr/local.
-# /usr/local must still be the configure prefix so paths baked into
-# dylibs (LC_LOAD_DYLIB) resolve correctly on the install target.
-sudo rm -rf "$STAGING"
-sudo mkdir -p "$STAGING"
-sudo python3 ./waf install --destdir="$STAGING"
-
-# Fix up the staging perms so pkgbuild can include the files (waf
-# install leaves some files with restrictive perms when run via sudo).
-sudo chmod -R u+rwX,go+rX "$STAGING"
+# Install to a private staging tree under the build dir (user-owned,
+# so no sudo needed). /usr/local must still be the configure prefix
+# so paths baked into dylibs (LC_LOAD_DYLIB) resolve correctly on
+# the install target; --destdir just redirects the file copies.
+rm -rf "$STAGING"
+mkdir -p "$STAGING"
+python3 ./waf install --destdir="$STAGING"
 
 echo
 echo "==> build the .pkg"
