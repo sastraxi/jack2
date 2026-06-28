@@ -112,6 +112,10 @@ namespace Jack
             jack_client_t* fClient;
             const char* fName;
             char fMulticastIP[32];
+            // Interface name to pin IP_ADD_MEMBERSHIP / IP_BOUND_IF to.
+            // Set from JACK_NETJACK_MULTICAST_IF. Empty = legacy INADDR_ANY
+            // behavior. See posix/JackNetUnixSocket.cpp::JoinMCastGroup.
+            char fMulticastIF[16];
             JackNetSocket fSocket;
             jack_native_thread_t fThread;
             master_list_t fMasterList;

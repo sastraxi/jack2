@@ -42,6 +42,7 @@ namespace Jack
     JackNetInterface::JackNetInterface(const char* multicast_ip, int port) : fSocket(multicast_ip, port)
     {
         strcpy(fMulticastIP, multicast_ip);
+        fMulticastIF[0] = '\0';
         Initialize();
     }
 
@@ -49,6 +50,7 @@ namespace Jack
     {
         fParams = params;
         strcpy(fMulticastIP, multicast_ip);
+        fMulticastIF[0] = '\0';
         Initialize();
     }
 

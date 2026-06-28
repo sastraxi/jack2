@@ -23,6 +23,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/time.h>
+#include <net/if.h>
 
 using namespace std;
 
@@ -261,10 +262,48 @@ namespace Jack
 
     int JackNetUnixSocket::JoinMCastGroup(const char* ip)
     {
+        return JoinMCastGroup(ip, NULL);
+    }
+
+    int JackNetUnixSocket::JoinMCastGroup(const char* ip, const char* ifname)
+    {
+        if (ifname == NULL || ifname[0] == '\0') {
+            // Legacy behavior: INADDR_ANY, kernel picks interface.
+            struct ip_mreq multicast_req;
+            inet_aton(ip, &multicast_req.imr_multiaddr);
+            multicast_req.imr_interface.s_addr = htonl(INADDR_ANY);
+            return SetOption(IPPROTO_IP, IP_ADD_MEMBERSHIP, &multicast_req, sizeof(multicast_req));
+        }
+
+        int idx = if_nametoindex(ifname);
+        if (idx == 0) {
+            NET_ERROR_CODE = ENODEV;
+            return SOCKET_ERROR;
+        }
+
+#if defined(__linux__)
+        // Linux: use ip_mreqn with an explicit ifindex. ip_mreq uses
+        // imr_interface.s_addr (an IPv4 address) which doesn't disambiguate
+        // when the host has the same address on multiple interfaces
+        // (common on laptops with link-local on both the cable and wifi).
+        struct ip_mreqn multicast_req;
+        memset(&multicast_req, 0, sizeof(multicast_req));
+        multicast_req.imr_multiaddr.s_addr = inet_addr(ip);
+        multicast_req.imr_address.s_addr = htonl(INADDR_ANY);
+        multicast_req.imr_ifindex = idx;
+        return SetOption(IPPROTO_IP, IP_ADD_MEMBERSHIP, &multicast_req, sizeof(multicast_req));
+#else
+        // macOS / BSD: use IP_BOUND_IF to bind the socket to the interface
+        // *before* the IP_ADD_MEMBERSHIP call. Then a regular ip_mreq with
+        // INADDR_ANY is fine because the bound interface takes effect.
+        if (SetOption(IPPROTO_IP, IP_BOUND_IF, &idx, sizeof(idx)) == SOCKET_ERROR) {
+            return SOCKET_ERROR;
+        }
         struct ip_mreq multicast_req;
         inet_aton(ip, &multicast_req.imr_multiaddr);
         multicast_req.imr_interface.s_addr = htonl(INADDR_ANY);
         return SetOption(IPPROTO_IP, IP_ADD_MEMBERSHIP, &multicast_req, sizeof(multicast_req));
+#endif
     }
 
     //options************************************************************************************************************

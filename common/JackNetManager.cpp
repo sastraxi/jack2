@@ -660,6 +660,18 @@ namespace Jack
             strcpy(fMulticastIP, DEFAULT_MULTICAST_IP);
         }
 
+        // Pin the multicast join to a specific interface. Required on
+        // hosts with more than one route to the multicast group (e.g. a
+        // direct-cable link-local on en7 plus a wifi link on en0) where
+        // IP_ADD_MEMBERSHIP with INADDR_ANY would otherwise pick the
+        // wrong one. Empty/unset keeps the legacy INADDR_ANY behavior.
+        const char* multicast_if = getenv("JACK_NETJACK_MULTICAST_IF");
+        fMulticastIF[0] = '\0';
+        if (multicast_if) {
+            strncpy(fMulticastIF, multicast_if, sizeof(fMulticastIF) - 1);
+            fMulticastIF[sizeof(fMulticastIF) - 1] = '\0';
+        }
+
         for (node = params; node; node = jack_slist_next(node)) {
 
             param = (const jack_driver_param_t*) node->data;
@@ -797,7 +809,7 @@ namespace Jack
         }
 
         //join multicast group
-        if (fSocket.JoinMCastGroup(fMulticastIP) == SOCKET_ERROR) {
+        if (fSocket.JoinMCastGroup(fMulticastIP, fMulticastIF) == SOCKET_ERROR) {
             jack_error("Can't join multicast group : %s", StrError(NET_ERROR_CODE));
         }
 

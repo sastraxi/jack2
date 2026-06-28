@@ -85,6 +85,10 @@ namespace Jack
             //utility
             int GetName(char* name);
             int JoinMCastGroup(const char* mcast_ip);
+            // Interface-pinned variant. See JackNetUnixSocket.h for rationale.
+            // The Windows socket backend doesn't currently honor ifname; it
+            // delegates to JoinMCastGroup(mcast_ip) for backwards compat.
+            int JoinMCastGroup(const char* mcast_ip, const char* ifname);
 
             //options management
             int SetOption(int level, int optname, const void* optval, SOCKLEN optlen);

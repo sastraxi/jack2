@@ -60,6 +60,14 @@ namespace Jack
             session_params_t fParams;
             JackNetSocket fSocket;
             char fMulticastIP[32];
+            // Optional interface name to pin IP_ADD_MEMBERSHIP / IP_BOUND_IF to.
+            // Set from JACK_NETJACK_MULTICAST_IF (read in the master / netone
+            // driver). Empty = legacy INADDR_ANY behavior. See
+            // posix/JackNetUnixSocket.cpp::JoinMCastGroup for the
+            // Linux/macOS path split. Size is the standard IFNAMSIZ/IF_NAMESIZE
+            // (16 on Linux/macOS/BSD) hardcoded so the Windows backend, which
+            // doesn't have <net/if.h>, can still lay this struct out.
+            char fMulticastIF[16];
 
             // headers
             packet_header_t fTxHeader;

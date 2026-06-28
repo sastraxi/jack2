@@ -84,6 +84,13 @@ namespace Jack
             //utility
             int GetName(char* name);
             int JoinMCastGroup(const char* mcast_ip);
+            // Bind the multicast join to a specific interface. Required when
+            // the host has more than one interface with a route to the
+            // multicast group (e.g. a direct-cable link-local on en7 plus a
+            // wifi link on en0) and the kernel would otherwise pick the
+            // wrong one via the unicast default route. Pass NULL or "" to
+            // keep the legacy INADDR_ANY behavior.
+            int JoinMCastGroup(const char* mcast_ip, const char* ifname);
 
             //options management
             int SetOption(int level, int optname, const void* optval, socklen_t optlen);

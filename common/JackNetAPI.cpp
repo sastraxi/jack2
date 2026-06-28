@@ -158,6 +158,12 @@ struct JackNetExtMaster : public JackNetMasterInterface {
         fRunning = true;
         assert(strlen(ip) < 32);
         strcpy(fMulticastIP, ip);
+        fMulticastIF[0] = '\0';
+        const char* multicast_if = getenv("JACK_NETJACK_MULTICAST_IF");
+        if (multicast_if) {
+            strncpy(fMulticastIF, multicast_if, sizeof(fMulticastIF) - 1);
+            fMulticastIF[sizeof(fMulticastIF) - 1] = '\0';
+        }
         fSocket.SetPort(port);
         fRequest.buffer_size = request->buffer_size;
         fRequest.sample_rate = request->sample_rate;
@@ -211,7 +217,7 @@ struct JackNetExtMaster : public JackNetMasterInterface {
         }
 
         // Join multicast group
-        if (fSocket.JoinMCastGroup(fMulticastIP) == SOCKET_ERROR) {
+        if (fSocket.JoinMCastGroup(fMulticastIP, fMulticastIF) == SOCKET_ERROR) {
             jack_error("Can't join multicast group : %s", StrError(NET_ERROR_CODE));
         }
 
@@ -518,12 +524,18 @@ struct JackNetExtSlave : public JackNetSlaveInterface, public JackRunnableInterf
         fErrorCallback(NULL), fErrorArg(NULL),
         fBufferSizeCallback(NULL), fBufferSizeArg(NULL),
         fSampleRateCallback(NULL), fSampleRateArg(NULL)
-   {
+    {
         char host_name[JACK_CLIENT_NAME_SIZE + 1];
 
         // Request parameters
         assert(strlen(ip) < 32);
         strcpy(fMulticastIP, ip);
+        fMulticastIF[0] = '\0';
+        const char* multicast_if = getenv("JACK_NETJACK_MULTICAST_IF");
+        if (multicast_if) {
+            strncpy(fMulticastIF, multicast_if, sizeof(fMulticastIF) - 1);
+            fMulticastIF[sizeof(fMulticastIF) - 1] = '\0';
+        }
         fParams.fMtu = request->mtu;
         fParams.fTransportSync = 0;
         fParams.fSendAudioChannels = request->audio_input;

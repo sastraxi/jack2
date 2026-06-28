@@ -274,6 +274,16 @@ namespace Jack
 
     int JackNetWinSocket::JoinMCastGroup(const char* ip)
     {
+        return JoinMCastGroup(ip, NULL);
+    }
+
+    int JackNetWinSocket::JoinMCastGroup(const char* ip, const char* ifname)
+    {
+        // Windows backend doesn't currently pin to a specific interface;
+        // the ifname parameter is accepted for API parity with the POSIX
+        // backend but ignored. If a Windows host needs this, the right
+        // primitive is SIO_RCVALL or a pre-bind via WSAIoctl; not in scope.
+        (void)ifname;
         struct ip_mreq multicast_req;
         multicast_req.imr_multiaddr.s_addr = inet_addr(ip);
         multicast_req.imr_interface.s_addr = htonl(INADDR_ANY);

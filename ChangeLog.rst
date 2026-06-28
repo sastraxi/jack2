@@ -1,6 +1,22 @@
 ChangeLog
 #########
 
+* Unreleased (sastraxi fork)
+
+  * netadapter: clear PI controller integrator on ringbuffer reset.
+    ``JackPIControler::OurOfBounds()`` exists for this but had zero call
+    sites in 1.9.22, so the integral accumulated unbounded across ring
+    resets and biased the resample ratio further from the true static
+    factor on each cycle.
+  * netJACK2: pin multicast group join to a specific interface via
+    ``JACK_NETJACK_MULTICAST_IF`` env var. Without this, hosts with
+    multiple routes to the multicast group (e.g. a direct-cable link-local
+    plus wifi) silently fail the discovery because ``IP_ADD_MEMBERSHIP``
+    with ``INADDR_ANY`` picks the wrong interface. Linux uses
+    ``struct ip_mreqn`` with ``imr_ifindex``; macOS/BSD uses
+    ``IP_BOUND_IF``; the legacy ``INADDR_ANY`` path is preserved when
+    the env var is unset.
+
 * 1.9.22 (2023-02-02)
 
   * The waf autooption ``--example-tools`` has been removed.
